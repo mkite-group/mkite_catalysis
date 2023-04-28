@@ -1,0 +1,143 @@
+{
+    "job": {
+        "id": 1,
+        "uuid": "7615c560-962d-4053-8c73-36f313d6fa36",
+        "ctime": "2022-07-23T07:45:47.722708",
+        "project": "test",
+        "experiment": "test01"
+    },
+    "recipe": {
+        "uuid": "f064f0aa-20d3-4d86-82d8-b025fe80a1e3",
+        "name": "catalysis.adsorption",
+        "package": "mkite_catalysis",
+        "method": "GEN"
+    },
+    "options": {
+    },
+    "inputs": [
+        {
+            "id": 1693,
+            "uuid": "b7ddafa1-8d7c-40ae-b122-40814873b7ae",
+            "parentjob": {"id": 184, "uuid": "83bf66db-323e-49d1-b635-05f1e568ff34"},
+            "spacegroup": 156,
+            "formula": {
+                "id": 242,
+                "name": "Cu12 +0",
+                "charge": 0,
+                "@module": "mkite.orm.base.models",
+                "@class": "Formula"
+            },
+            "family": null,
+            "ctime": "2022-09-04T15:56:08.016522Z",
+            "mtime": "2022-09-04T15:56:08.034617Z",
+            "species": [
+                "Cu",
+                "Cu",
+                "Cu",
+                "Cu",
+                "Cu",
+                "Cu",
+                "Cu",
+                "Cu",
+                "Cu",
+                "Cu",
+                "Cu",
+                "Cu"
+            ],
+            "coords": [
+                [4.089121377893, 2.360855180427, 0.83467965312],
+                [0.0, 0.0, 0.0],
+                [2.044557622107, 1.180425819573, 1.66938434688],
+                [4.089121377893, 2.360855180427, 3.3378171494399997],
+                [0.0, 0.0, 2.4949241664],
+                [2.044557622107, 1.180425819573, 4.16192965248],
+                [4.089121377893, 2.360855180427, 5.82660635904],
+                [0.0, 0.0, 5.05410261504],
+                [2.044557622107, 1.180425819573, 6.64155398784],
+                [4.089121377893, 2.360855180427, 8.33269865088],
+                [0.0, 0.0, 7.6713002265600005],
+                [2.044557622107, 1.180425819573, 9.03433738368]
+            ],
+            "lattice": [
+                [4.089119, 0.0, 0.0],
+                [2.04456, 3.541281, 0.0],
+                [0.0, 0.0, 25.04064]
+            ],
+            "attributes": {"miller_index": [1, 1, 1], "reconstruction": null},
+			"siteprops": {
+				"location": [
+                    "bottom",
+                    "bottom",
+                    "bottom",
+                    "bulk",
+                    "bulk",
+                    "bulk",
+                    "bulk",
+                    "bulk",
+                    "bulk",
+                    "top",
+                    "top",
+                    "top"
+                ],
+				"bulk_wyckoff": ["a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a"],
+				"bulk_equivalent": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				"selective_dynamics": [
+                    [false, false, false],
+                    [false, false, false],
+                    [false, false, false],
+                    [true, true, true],
+                    [true, true, true],
+                    [true, true, true],
+                    [true, true, true],
+                    [true, true, true],
+                    [true, true, true],
+                    [true, true, true],
+                    [true, true, true],
+                    [true, true, true]
+	    	]},
+            "@module": "mkite.orm.structs.models",
+            "@class": "Crystal"
+        },
+        {
+            "id": 1865,
+            "uuid": "461694bd-597a-48b2-be81-290c49061fd2",
+            "parentjob": {"id": 1018, "uuid": "be26a968-a68f-444a-8677-6e49b343b3fb"},
+            "formula": {
+                "id": 356,
+                "name": "H1 +0",
+                "charge": 0,
+                "@module": "mkite.orm.base.models",
+                "@class": "Formula"
+            },
+            "mol": {
+                "id": 1808,
+                "uuid": "e2d86025-8afe-4fa0-802c-1ae96b0b8eaa",
+                "parentjob": {"id": 996, "uuid": "6c53ab95-36ae-4291-932b-dc1a22f8bb7d"},
+                "formula": {
+                    "id": 356,
+                    "name": "H1 +0",
+                    "charge": 0,
+                    "@module": "mkite.orm.base.models",
+                    "@class": "Formula"
+                },
+                "family": null,
+                "ctime": "2022-09-05T22:32:15.598054Z",
+                "mtime": "2022-09-06T03:54:27.799302Z",
+                "inchikey": "YZCKVEUIGOORGS-UHFFFAOYSA-N",
+                "smiles": "[H]",
+                "siteprops": {},
+                "attributes": {},
+                "@module": "mkite.orm.mols.models",
+                "@class": "Molecule"
+            },
+            "ctime": "2022-09-06T03:54:27.801490Z",
+            "mtime": "2022-09-06T03:54:27.821103Z",
+            "species": ["H"],
+            "coords": [[0.0, 0.0, 0.0]],
+            "siteprops": {},
+            "attributes": {},
+            "@module": "mkite.orm.mols.models",
+            "@class": "Conformer"
+        }
+    ]
+}
