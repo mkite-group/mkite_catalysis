@@ -1,7 +1,7 @@
 import os
 import time
 import math
-from typing import Tuple, List
+from typing import Tuple, List, Union
 from pydantic import Field
 from pymatgen.core.surface import (
     Slab,
@@ -20,7 +20,7 @@ class SurfaceGenerationOptions(BaseOptions):
         2,
         description="Maximum Miller index when generating a surface",
     )
-    miller_indices: Tuple[int] = Field(
+    miller_indices: Union[Tuple[int], List[Tuple[int]]] = Field(
         None,
         description="Miller indices used to generate a surface",
     )
@@ -46,10 +46,21 @@ class SurfaceGenerationRecipe(CatalysisRecipe):
         miller_indices = opts.get("miller_indices", None)
 
         if miller_indices is not None:
-            slabs = [
-                sl
-                for sl in self.gen_slabs(miller_indices=miller_indices)
-            ]
+            if not isinstance(miller_indices, list):
+                pass
+
+            elif len(miller_indices) == 0:
+                pass
+
+            elif isinstance(miller_indices[0], int):
+                slabs = [sl for sl in self.gen_slabs(miller_indices=miller_indices)]
+
+            elif isinstance(miller_indices[0], list):
+                slabs = [
+                    sl
+                    for mi in miller_indices
+                    for sl in self.gen_slabs(miller_indices=mi)
+                ]
 
         elif max_index is not None:
             slabs = [
@@ -70,10 +81,7 @@ class SurfaceGenerationRecipe(CatalysisRecipe):
         generator = self.get_slab_generator(miller_indices)
 
         slabs = generator.get_slabs()
-        slabs = [
-            self.format_slab(sl)
-            for sl in slabs
-        ]
+        slabs = [self.format_slab(sl) for sl in slabs]
 
         return slabs
 
