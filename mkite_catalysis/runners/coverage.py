@@ -32,13 +32,13 @@ class CoverageGenerator:
         if surface is None:
             return AdsorbateSiteFinder(
                 self.surface.copy(),
-                selective_dynamics=True,
+                selective_dynamics=False,
                 height=self.surf_height,
             )
 
         return AdsorbateSiteFinder(
             surface,
-            selective_dynamics=True,
+            selective_dynamics=False,
             height=self.surf_height,
         )
 

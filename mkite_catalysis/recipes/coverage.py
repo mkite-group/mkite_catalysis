@@ -1,23 +1,20 @@
 import os
 import time
-import math
-import numpy as np
-from typing import List, Dict
-from pydantic import Field
-from pymatgen.core import Structure, Molecule
-
-from mkite_core.recipes import BaseOptions, RecipeError
-from mkite_core.models import (
-    CrystalInfo,
-    ConformerInfo,
-    NodeResults,
-    JobResults,
-    RunStatsInfo,
-)
+from typing import Dict
+from typing import List
 
 from mkite_catalysis.recipes import CatalysisRecipe
 from mkite_catalysis.runners.coverage import CoverageGenerator
 from mkite_catalysis.runners.deduplicate import Deduplicator
+from mkite_core.models import ConformerInfo
+from mkite_core.models import CrystalInfo
+from mkite_core.models import JobResults
+from mkite_core.models import NodeResults
+from mkite_core.recipes import BaseOptions
+from mkite_core.recipes import RecipeError
+from pydantic import Field
+from pymatgen.core import Molecule
+from pymatgen.core import Structure
 
 
 class CoverageOptions(BaseOptions):
@@ -31,27 +28,35 @@ class CoverageOptions(BaseOptions):
     )
     surface_height: float = Field(
         0.9,
-        description="Height at which atoms are considered to be part of the surface",
+        description="Height at which atoms are considered to be \
+            part of the surface",
     )
     adsorption_height: float = Field(
         2.0, description="Height at which the adsorbate will be placed"
     )
     distance_threshold: float = Field(
         3.0,
-        description="Maximum distance between the relevant adsorption sites and the adsorption site",
+        description="Maximum distance between the relevant adsorption sites \
+            and the adsorption site",
     )
     deduplicate_k: int = Field(
         30,
-        description="Number of neighbors to consider when deduplicating structures",
+        description="Number of neighbors to consider when \
+            deduplicating structures",
     )
     deduplicate_tol: float = Field(
         1e-3,
         description="Maximum distance to consider two structures as identical",
     )
+    max_enumeration: int = Field(
+        int(1e6),
+        description="Maximum number of attempts to enumerate when \
+            generating the configurations",
+    )
 
 
 class CoverageRecipe(CatalysisRecipe):
-    OPTIONS_CLS = AdsorptionOptions
+    OPTIONS_CLS = CoverageOptions
 
     def run(self):
         start_time = time.process_time()
@@ -107,6 +112,7 @@ class CoverageRecipe(CatalysisRecipe):
             surface_height=opts["surface_height"],
             adsorption_height=opts["adsorption_height"],
             distance_threshold=opts["distance_threshold"],
+            max_enumeration=opts["max_enumeration"],
         )
 
         return generator.generate_random_configs()
