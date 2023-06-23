@@ -13,6 +13,7 @@ keywords = ["workflow", "materials-science"]
 dependencies = [
     "pydantic",
     "pymatgen",
+    "average-minimum-distance==1.4.1",
 ]
 
 [tool.setuptools]
