@@ -22,3 +22,4 @@ packages = ["mkite_catalysis"]
 "catalysis.surfgen" = "mkite_catalysis.recipes.surfgen:SurfaceGenerationRecipe"
 "catalysis.adsorption" = "mkite_catalysis.recipes.adsorption:AdsorptionRecipe"
 "catalysis.supercell" = "mkite_catalysis.recipes.supercell:SupercellGenerationRecipe"
+"catalysis.coverage" = "mkite_catalysis.recipes.coverage:CoverageRecipe"
