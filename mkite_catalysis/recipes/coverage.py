@@ -18,8 +18,8 @@ from pymatgen.core import Structure
 
 
 class CoverageOptions(BaseOptions):
-    num_adsorbates: int = Field(
-        2,
+    num_adsorbates: List[int] = Field(
+        [2],
         description="Number of adsorbates to add to the surface",
     )
     num_configs: int = Field(
@@ -64,7 +64,6 @@ class CoverageRecipe(CatalysisRecipe):
         surface, adsorbate = self.get_inputs()
 
         structures = self.generate(surface, adsorbate)
-        structures = self.deduplicate(structures)
 
         end_time = time.process_time()
         duration = round(end_time - start_time, 6)
@@ -103,7 +102,7 @@ class CoverageRecipe(CatalysisRecipe):
 
     def generate(
         self, surface: Structure, adsorbate: Molecule
-    ) -> Dict[str, List[Structure]]:
+    ) -> Dict[int, List[Structure]]:
         opts = self.get_options()
         generator = CoverageGenerator(
             surface,
@@ -114,10 +113,16 @@ class CoverageRecipe(CatalysisRecipe):
             max_enumeration=opts["max_enumeration"],
         )
 
-        return generator.generate_random_configs(
-            num_adsorbates=opts["num_adsorbates"],
-            num_configs=opts["num_configs"],
-        )
+        results = {}
+        for num in opts["num_adsorbates"]:
+            structures = generator.generate_random_configs(
+                num_adsorbates=opts["num_adsorbates"],
+                num_configs=opts["num_configs"],
+            )
+            structures = self.deduplicate(structures)
+            results[num] = structures
+
+        return results
 
     def deduplicate(self, structures: List[Structure]) -> List[Structure]:
         opts = self.get_options()
@@ -128,18 +133,20 @@ class CoverageRecipe(CatalysisRecipe):
         return dedup.deduplicate(structures)
 
     def postprocess(
-        self, structures: Dict[str, List[Structure]], duration: float, **kwargs
+        self, structures: Dict[int, List[Structure]], duration: float, **kwargs
     ) -> JobResults:
         nodes = []
-        for struct in structures:
-            info = CrystalInfo.from_pymatgen(struct)
-            info.attributes = {
-                **self.get_input_attributes("Crystal"),
-                **kwargs,
-            }
+        for num_adsorbates, struct_list in structures.items():
+            for struct in struct_list:
+                info = CrystalInfo.from_pymatgen(struct)
+                info.attributes = {
+                    **self.get_input_attributes("Crystal"),
+                    **kwargs,
+                    "num_adsorbates": num_adsorbates,
+                }
 
-            nr = NodeResults(chemnode=info.as_dict(), calcnodes=[])
-            nodes.append(nr)
+                nr = NodeResults(chemnode=info.as_dict(), calcnodes=[])
+                nodes.append(nr)
 
         runstats = self.get_run_stats(duration)
 
