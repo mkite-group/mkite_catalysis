@@ -1,6 +1,6 @@
+import itertools
 import math
 import random
-import itertools
 from typing import List
 
 import numpy as np
@@ -58,9 +58,6 @@ class CoverageGenerator:
     def get_combinations(
         self, num_adsorbates: int, num_configs: int, dists: np.ndarray
     ):
-        if num_adsorbates == 1:
-            return [[i] for i in indices]
-
         num_enums = math.comb(len(dists), num_adsorbates)
 
         if num_enums < num_configs or num_enums < self.max_enum:
@@ -72,6 +69,9 @@ class CoverageGenerator:
         self, num_adsorbates: int, num_configs: int, dists: np.ndarray
     ):
         indices = list(range(len(dists)))
+        if num_adsorbates == 1:
+            return [[i] for i in indices]
+
         combinations = []
         for comb in itertools.combinations(indices, r=num_adsorbates):
             # select distance submatrix
