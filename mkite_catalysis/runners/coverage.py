@@ -1,9 +1,11 @@
-import random
 import itertools
-import numpy as np
+import random
 from typing import List
-from pymatgen.core import Structure, Molecule
+
+import numpy as np
 from pymatgen.analysis.adsorption import AdsorbateSiteFinder
+from pymatgen.core import Molecule
+from pymatgen.core import Structure
 
 
 class CoverageGenerator:
@@ -23,9 +25,16 @@ class CoverageGenerator:
         self.ads_height = adsorption_height
         self.dist_thresh = distance_threshold
 
-    def get_finder(self):
+    def get_finder(self, surface=None):
+        if surface is None:
+            return AdsorbateSiteFinder(
+                self.surface.copy(),
+                selective_dynamics=True,
+                height=self.surf_height,
+            )
+
         return AdsorbateSiteFinder(
-            self.surface.copy(),
+            surface,
             selective_dynamics=True,
             height=self.surf_height,
         )
@@ -40,20 +49,33 @@ class CoverageGenerator:
 
     def get_distances(self, sites: np.ndarray) -> np.ndarray:
         lattice = self.surface.lattice
-        frac_coords = np.stack(
-            [lattice.get_fractional_coordinates(site) for site in sites]
-        )
+        frac_coords = np.stack([lattice.get_fractional_coords(site) for site in sites])
         return lattice.get_all_distances(frac_coords, frac_coords)
 
-    def get_combinations(self, num_adsorbates: int, dists: np.ndarray):
-        indices = list(range(dists))
+    def get_combinations(
+        self, num_adsorbates: int, num_configs: int, dists: np.ndarray
+    ):
+        indices = list(range(len(dists)))
+
+        if num_adsorbates == 1:
+            return [[i] for i in indices]
+
+        # as we have an early stopping, make the combinations random
+        # instead of relying on sorted indices
+        random.shuffle(indices)
+
         combinations = []
         for comb in itertools.combinations(indices, r=num_adsorbates):
-            pairs = list(itertools.combinations(comb, 2))
-            pair_dists = dists[pairs]
+            comb = list(comb)
+            # select distance submatrix
+            d = dists[:, comb][comb]
+            i = np.triu_indices_from(d, k=1)
 
-            if min(pair_dists) > self.dist_thresh:
+            if min(d[i]) > self.dist_thresh:
                 combinations.append(comb)
+
+            if len(combinations) >= num_configs:
+                return combinations
 
         return combinations
 
@@ -63,18 +85,18 @@ class CoverageGenerator:
         sites = self.get_sites()
         dists = self.get_distances(sites)
 
-        site_combinations = self.get_combinations(num_adsorbates, dists)
-        if len(site_combinations) > num_configs:
-            site_combinations = random.sample(site_combinations, num_configs)
+        combinations = self.get_combinations(num_adsorbates, num_configs, dists)
 
         structures = []
-        for comb in site_combinations:
-            finder = self.get_finder()
+        for comb in combinations:
+            adsorbed = self.surface.copy()
             for i in comb:
                 coords = sites[i]
+                finder = self.get_finder(adsorbed)
                 adsorbed = finder.add_adsorbate(self.adsorbate, coords)
-                adsorbed = self.add_adsorbate_tags(adsorbed)
-                structures.append(adsorbed)
+
+            adsorbed = self.add_adsorbate_tags(adsorbed)
+            structures.append(adsorbed)
 
         return structures
 
