@@ -18,13 +18,13 @@ from pymatgen.core import Structure
 
 
 class CoverageOptions(BaseOptions):
-    num_configs: int = Field(
-        100,
-        description="Maximum number of configurations to generate",
-    )
     num_adsorbates: int = Field(
         2,
         description="Number of adsorbates to add to the surface",
+    )
+    num_configs: int = Field(
+        100,
+        description="Maximum number of configurations to generate",
     )
     surface_height: float = Field(
         0.9,
@@ -35,7 +35,7 @@ class CoverageOptions(BaseOptions):
         2.0, description="Height at which the adsorbate will be placed"
     )
     distance_threshold: float = Field(
-        3.0,
+        2.0,
         description="Maximum distance between the relevant adsorption sites \
             and the adsorption site",
     )
@@ -63,14 +63,13 @@ class CoverageRecipe(CatalysisRecipe):
 
         surface, adsorbate = self.get_inputs()
 
-        surface, scale = self.make_lateral_supercell(surface)
         structures = self.generate(surface, adsorbate)
         structures = self.deduplicate(structures)
 
         end_time = time.process_time()
         duration = round(end_time - start_time, 6)
 
-        return self.postprocess(structures, duration=duration, scale=scale)
+        return self.postprocess(structures, duration=duration)
 
     def get_inputs(self):
         surface, adsorbate = None, None
@@ -88,7 +87,7 @@ class CoverageRecipe(CatalysisRecipe):
 
             elif inp["@class"] == "Crystal":
                 surface = CrystalInfo.from_dict(inp)
-                surface = surface.as_pymatgen(surface)
+                surface = surface.as_pymatgen()
 
         assert surface is not None, "No Crystal provided as input"
         assert adsorbate is not None, "No Conformer provided as input"
@@ -115,7 +114,10 @@ class CoverageRecipe(CatalysisRecipe):
             max_enumeration=opts["max_enumeration"],
         )
 
-        return generator.generate_random_configs()
+        return generator.generate_random_configs(
+            num_adsorbates=opts["num_adsorbates"],
+            num_configs=opts["num_configs"],
+        )
 
     def deduplicate(self, structures: List[Structure]) -> List[Structure]:
         opts = self.get_options()
@@ -129,17 +131,15 @@ class CoverageRecipe(CatalysisRecipe):
         self, structures: Dict[str, List[Structure]], duration: float, **kwargs
     ) -> JobResults:
         nodes = []
-        for ads_site, struct_list in structures.items():
-            for struct in struct_list:
-                info = CrystalInfo.from_pymatgen(struct)
-                info.attributes = {
-                    **self.get_input_attributes("Crystal"),
-                    "adsorption_site": ads_site,
-                    **kwargs,
-                }
+        for struct in structures:
+            info = CrystalInfo.from_pymatgen(struct)
+            info.attributes = {
+                **self.get_input_attributes("Crystal"),
+                **kwargs,
+            }
 
-                nr = NodeResults(chemnode=info.as_dict(), calcnodes=[])
-                nodes.append(nr)
+            nr = NodeResults(chemnode=info.as_dict(), calcnodes=[])
+            nodes.append(nr)
 
         runstats = self.get_run_stats(duration)
 
