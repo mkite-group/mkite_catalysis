@@ -116,7 +116,7 @@ class CoverageRecipe(CatalysisRecipe):
         results = {}
         for num in opts["num_adsorbates"]:
             structures = generator.generate_random_configs(
-                num_adsorbates=opts["num_adsorbates"],
+                num_adsorbates=num,
                 num_configs=opts["num_configs"],
             )
             structures = self.deduplicate(structures)
