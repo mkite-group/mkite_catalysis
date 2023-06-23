@@ -74,8 +74,8 @@ class CoverageGenerator:
 
         combinations = []
         for comb in itertools.combinations(indices, r=num_adsorbates):
-            # select distance submatrix
-            d = dists[:, comb][comb]
+            combarr = np.array(comb)
+            d = dists[combarr.reshape(-1, 1), combarr.reshape(1, -1)]
             i = np.triu_indices_from(d, k=1)
 
             if min(d[i]) > self.dist_thresh:
