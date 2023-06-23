@@ -1,5 +1,6 @@
-import itertools
+import math
 import random
+import itertools
 from typing import List
 
 import numpy as np
@@ -18,12 +19,14 @@ class CoverageGenerator:
         surface_height: float = 0.9,
         adsorption_height: float = 2.0,
         distance_threshold: float = 2.0,
+        max_enumeration: int = int(1e6),
     ):
         self.surface = surface
         self.adsorbate = adsorbate
         self.surf_height = surface_height
         self.ads_height = adsorption_height
         self.dist_thresh = distance_threshold
+        self.max_enum = max_enumeration
 
     def get_finder(self, surface=None):
         if surface is None:
@@ -55,18 +58,22 @@ class CoverageGenerator:
     def get_combinations(
         self, num_adsorbates: int, num_configs: int, dists: np.ndarray
     ):
-        indices = list(range(len(dists)))
-
         if num_adsorbates == 1:
             return [[i] for i in indices]
 
-        # as we have an early stopping, make the combinations random
-        # instead of relying on sorted indices
-        random.shuffle(indices)
+        num_enums = math.comb(len(dists), num_adsorbates)
 
+        if num_enums < num_configs or num_enums < self.max_enum:
+            return self.get_small_combinations(num_adsorbates, num_configs, dists)
+
+        return self.get_large_combinations(num_adsorbates, num_configs, dists)
+
+    def get_small_combinations(
+        self, num_adsorbates: int, num_configs: int, dists: np.ndarray
+    ):
+        indices = list(range(len(dists)))
         combinations = []
         for comb in itertools.combinations(indices, r=num_adsorbates):
-            comb = list(comb)
             # select distance submatrix
             d = dists[:, comb][comb]
             i = np.triu_indices_from(d, k=1)
@@ -74,8 +81,31 @@ class CoverageGenerator:
             if min(d[i]) > self.dist_thresh:
                 combinations.append(comb)
 
-            if len(combinations) >= num_configs:
-                return combinations
+        if len(combinations) <= num_configs:
+            return combinations
+
+        return random.sample(combinations, num_configs)
+
+    def get_large_combinations(
+        self, num_adsorbates: int, num_configs: int, dists: np.ndarray
+    ):
+        indices = list(range(len(dists)))
+
+        attempts = 0
+        combinations = []
+        while len(combinations) < num_configs or attempts > self.max_enum:
+            # when there are too many combinations, it is
+            # better to simply sample the indices
+            comb = random.sample(indices, num_adsorbates)
+
+            # select distance submatrix
+            d = dists[:, comb][comb]
+            i = np.triu_indices_from(d, k=1)
+
+            if min(d[i]) > self.dist_thresh:
+                combinations.append(comb)
+
+            attempts += 1
 
         return combinations
 
@@ -109,5 +139,6 @@ class CoverageGenerator:
 
         for i in adsorbed_idx:
             struct[i].properties["location"] = "adsorbate"
+            struct[i].properties["selective_dynamics"] = [True, True, True]
 
         return struct
