@@ -50,6 +50,9 @@ class Deduplicator:
         return unique
 
     def deduplicate(self, crystals: List[Union[Atoms, Structure]]):
+        if not crystals:
+            return crystals
+
         pdds = self.get_pdds(crystals)
         dm = self.get_pdd_distance_matrix(pdds)
         unique = self.find_unique_idx(dm)

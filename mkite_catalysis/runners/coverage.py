@@ -93,7 +93,7 @@ class CoverageGenerator:
 
         attempts = 0
         combinations = []
-        while len(combinations) < num_configs or attempts > self.max_enum:
+        while len(combinations) < num_configs and attempts < self.max_enum:
             # when there are too many combinations, it is
             # better to simply sample the indices
             comb = random.sample(indices, num_adsorbates)
