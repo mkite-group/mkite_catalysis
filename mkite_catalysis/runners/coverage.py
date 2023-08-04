@@ -48,7 +48,34 @@ class CoverageGenerator:
             distance=self.ads_height,
             symm_reduce=-1,
         )
-        return np.stack(sites["all"])
+        sites = np.stack(sites["all"])
+
+        return self.filter_sites(sites)
+
+    def filter_sites(self, sites: np.ndarray) -> np.ndarray:
+        """Filter sites by their distances to existing adsorbates"""
+        if "surface_properties" not in self.surface.site_properties:
+            return sites
+
+        adsorbates = [
+            site.properties["surface_properties"] == "adsorbate"
+            for site in self.surface
+        ]
+
+        if len(adsorbates) == 0:
+            return sites
+
+        # computes fractional coordinates for sites and adsorbates
+        lattice = self.surface.lattice
+        ads_coords = self.surface.frac_coords[adsorbates]
+        site_coords = lattice.get_fractional_coords(sites)
+
+        # valid sites do not overlap with adsorbates
+        dm = lattice.get_all_distances(ads_coords, site_coords)
+        min_dist = dm.min(0)
+        valid = min_dist > self.dist_thresh
+
+        return sites[valid]
 
     def get_distances(self, sites: np.ndarray) -> np.ndarray:
         lattice = self.surface.lattice
