@@ -58,8 +58,9 @@ class CoverageGenerator:
             return sites
 
         adsorbates = [
-            site.properties["surface_properties"] == "adsorbate"
-            for site in self.surface
+            idx
+            for idx, site in enumerate(self.surface)
+            if site.properties["surface_properties"] == "adsorbate"
         ]
 
         if len(adsorbates) == 0:
