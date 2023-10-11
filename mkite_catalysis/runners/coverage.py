@@ -2,6 +2,7 @@ import itertools
 import math
 import random
 from typing import List
+from typing import Tuple
 
 import numpy as np
 from pymatgen.analysis.adsorption import AdsorbateSiteFinder
@@ -102,11 +103,8 @@ class CoverageGenerator:
 
         combinations = []
         for comb in itertools.combinations(indices, r=num_adsorbates):
-            combarr = np.array(comb)
-            d = dists[combarr.reshape(-1, 1), combarr.reshape(1, -1)]
-            i = np.triu_indices_from(d, k=1)
-
-            if min(d[i]) > self.dist_thresh:
+            comb = list(comb)
+            if self.indices_are_valid(comb, dists):
                 combinations.append(comb)
 
         if len(combinations) <= num_configs:
@@ -125,17 +123,48 @@ class CoverageGenerator:
             # when there are too many combinations, it is
             # better to simply sample the indices
             comb = random.sample(indices, num_adsorbates)
-
-            # select distance submatrix
-            d = dists[:, comb][comb]
-            i = np.triu_indices_from(d, k=1)
-
-            if min(d[i]) > self.dist_thresh:
+            if self.indices_are_valid(comb, dists):
                 combinations.append(comb)
 
             attempts += 1
 
         return combinations
+
+    def swap_indices(
+        self,
+        indices: List[int],
+        num_configs: int,
+        dists: np.ndarray,
+        num_swap: int = 1,
+    ):
+        num_adsorbates = len(indices)
+        assert num_swap <= num_adsorbates, (
+            f"cannot swap {num_swap} sites"
+            + f"when there are {num_adsorbates} adsorbates!"
+        )
+
+        others = [i for i in range(len(dists)) if i not in indices]
+
+        attempts = 0
+        combinations = []
+        while len(combinations) < num_configs and attempts < self.max_enum:
+            to_keep = random.sample(indices, num_adsorbates - num_swap)
+            to_add = random.sample(others, num_swap)
+            comb = list(to_keep) + list(to_add)
+
+            if self.indices_are_valid(comb, dists):
+                combinations.append(comb)
+
+            attempts += 1
+
+        return combinations
+
+    def indices_are_valid(self, indices: List[int], dists: np.ndarray):
+        # select distance submatrix
+        d = dists[:, indices][indices]
+        i = np.triu_indices_from(d, k=1)
+
+        return min(d[i]) > self.dist_thresh
 
     def generate_random_configs(
         self, num_adsorbates: int, num_configs: int = 50
@@ -147,16 +176,20 @@ class CoverageGenerator:
 
         structures = []
         for comb in combinations:
-            adsorbed = self.surface.copy()
-            for i in comb:
-                coords = sites[i]
-                finder = self.get_finder(adsorbed)
-                adsorbed = finder.add_adsorbate(self.adsorbate, coords)
-
-            adsorbed = self.add_adsorbate_tags(adsorbed)
+            adsorb_locs = [sites[i] for i in comb]
+            adsorbed = self.adsorb_on_sites(adsorb_locs)
             structures.append(adsorbed)
 
         return structures
+
+    def adsorb_on_sites(self, sites: List[Tuple[float, float, float]]):
+        adsorbed = self.surface.copy()
+        for coords in sites:
+            finder = self.get_finder(adsorbed)
+            adsorbed = finder.add_adsorbate(self.adsorbate, coords)
+
+        adsorbed = self.add_adsorbate_tags(adsorbed)
+        return adsorbed
 
     def add_adsorbate_tags(self, struct: Structure):
         adsorbed_idx = [
