@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mkite_catalysis"
-version = "0.1.0"
+version = "24.09.05"
 description = "plugin to deal with surface- and catalysis-related operations in mkite"
-authors = [{name = "Daniel Schwalbe-Koda", email = "dskoda@llnl.gov"}]
+authors = [{name = "Daniel Schwalbe-Koda", email = "dskoda@ucla.edu"}]
 readme = "README.md"
 requires-python = ">=3.8"
 keywords = ["workflow", "materials-science"]
 dependencies = [
-    "pydantic",
+    "pydantic>=2.0",
     "pymatgen",
     "average-minimum-distance==1.4.1",
 ]
